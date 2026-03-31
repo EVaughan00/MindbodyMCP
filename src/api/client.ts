@@ -8,7 +8,7 @@ class MindbodyApiClient {
 
   constructor() {
     const apiUrl = process.env.MINDBODY_API_URL || 'https://api.mindbodyonline.com/public/v6';
-    
+
     this.client = axios.create({
       baseURL: apiUrl,
       timeout: 30000,
@@ -25,8 +25,10 @@ class MindbodyApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
-        if (error.response?.status === 401) {
-          // Token might be expired, force refresh
+        if (error.response?.status === 401 && !error.config._retried) {
+          // Token might be expired, reset and retry once
+          error.config._retried = true;
+          mindbodyAuth.resetTokenState();
           const headers = await mindbodyAuth.getAuthHeaders();
           Object.assign(error.config.headers, headers);
           return this.client.request(error.config);
@@ -45,14 +47,15 @@ class MindbodyApiClient {
         await this.delay(this.retryDelay * Math.pow(2, retries));
         return this.request<T>(config, retries + 1);
       }
-      
+
       throw this.formatError(error);
     }
   }
 
   private shouldRetry(error: any): boolean {
-    // Retry on network errors or 5xx errors
-    return !error.response || error.response.status >= 500;
+    // Retry on network errors or 5xx errors, but NOT on 401/403 auth errors
+    if (!error.response) return true;
+    return error.response.status >= 500;
   }
 
   private delay(ms: number): Promise<void> {
@@ -64,11 +67,20 @@ class MindbodyApiClient {
       const mbError = error.response.data.Error;
       return new Error(`Mindbody API Error: ${mbError.Message} (Code: ${mbError.Code})`);
     }
-    
+
     if (error.response) {
-      return new Error(`API Error: ${error.response.status} - ${error.response.statusText}`);
+      const status = error.response.status;
+      const statusText = error.response.statusText;
+      if (status === 401 || status === 403) {
+        return new Error(
+          `Mindbody Auth Error (${status}): ${statusText}. ` +
+          `Check that your MINDBODY_API_KEY is valid and activated for site ${process.env.MINDBODY_SITE_ID}. ` +
+          `If using source credentials, verify MINDBODY_SOURCE_NAME and MINDBODY_SOURCE_PASSWORD are correct.`
+        );
+      }
+      return new Error(`API Error: ${status} - ${statusText}`);
     }
-    
+
     return new Error(`Network Error: ${error.message}`);
   }
 
