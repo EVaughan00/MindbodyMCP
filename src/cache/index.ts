@@ -1,3 +1,5 @@
+import { getTenantNamespace } from '../api/context.js';
+
 interface CacheEntry<T> {
   data: T;
   expiresAt: Date;
@@ -11,25 +13,31 @@ export class SimpleCache {
     this.defaultTTL = defaultTTLMinutes * 60 * 1000; // Convert to milliseconds
   }
 
+  // Prefix every key with the active tenant namespace so cached Mindbody data
+  // is never shared across studios on a warm serverless instance.
+  private nsKey(key: string): string {
+    return `${getTenantNamespace()}::${key}`;
+  }
+
   set<T>(key: string, value: T, ttlMinutes?: number): void {
     const ttl = ttlMinutes ? ttlMinutes * 60 * 1000 : this.defaultTTL;
     const expiresAt = new Date(Date.now() + ttl);
-    
-    this.cache.set(key, {
+
+    this.cache.set(this.nsKey(key), {
       data: value,
       expiresAt,
     });
   }
 
   get<T>(key: string): T | null {
-    const entry = this.cache.get(key);
-    
+    const entry = this.cache.get(this.nsKey(key));
+
     if (!entry) {
       return null;
     }
 
     if (entry.expiresAt < new Date()) {
-      this.cache.delete(key);
+      this.cache.delete(this.nsKey(key));
       return null;
     }
 
@@ -45,7 +53,7 @@ export class SimpleCache {
   }
 
   delete(key: string): void {
-    this.cache.delete(key);
+    this.cache.delete(this.nsKey(key));
   }
 
   // Clean up expired entries

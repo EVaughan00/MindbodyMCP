@@ -1,5 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { mindbodyAuth } from './auth';
+import { mindbodyAuth } from './auth.js';
+import { getTenantCreds } from './context.js';
+
+const DEFAULT_API_URL = 'https://api.mindbodyonline.com/public/v6';
 
 class MindbodyApiClient {
   private client: AxiosInstance;
@@ -7,15 +10,13 @@ class MindbodyApiClient {
   private readonly retryDelay = 1000;
 
   constructor() {
-    const apiUrl = process.env.MINDBODY_API_URL || 'https://api.mindbodyonline.com/public/v6';
-
     this.client = axios.create({
-      baseURL: apiUrl,
       timeout: 30000,
     });
 
-    // Add request interceptor to add auth headers
+    // Add request interceptor to set the per-tenant base URL + auth headers
     this.client.interceptors.request.use(async (config) => {
+      config.baseURL = getTenantCreds().apiUrl || DEFAULT_API_URL;
       const headers = await mindbodyAuth.getAuthHeaders();
       Object.assign(config.headers, headers);
       return config;
@@ -74,8 +75,8 @@ class MindbodyApiClient {
       if (status === 401 || status === 403) {
         return new Error(
           `Mindbody Auth Error (${status}): ${statusText}. ` +
-          `Check that your MINDBODY_API_KEY is valid and activated for site ${process.env.MINDBODY_SITE_ID}. ` +
-          `If using source credentials, verify MINDBODY_SOURCE_NAME and MINDBODY_SOURCE_PASSWORD are correct.`
+          `Check that the tenant's Mindbody API key is valid and activated for site ${getTenantCreds().siteId}. ` +
+          `If using source credentials, verify the source name and password are correct.`
         );
       }
       return new Error(`API Error: ${status} - ${statusText}`);

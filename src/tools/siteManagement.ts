@@ -1,5 +1,5 @@
-import { mindbodyClient } from '../api/client';
-import { classCache } from '../cache/index';
+import { mindbodyClient } from '../api/client.js';
+import { classCache } from '../cache/index.js';
 
 // Get site information
 export async function getSitesTool(): Promise<{

@@ -45,3 +45,4 @@ coverage/
 
 # MCP specific
 mcp-debug.log
+.vercel

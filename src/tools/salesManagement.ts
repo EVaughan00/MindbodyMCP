@@ -1,4 +1,4 @@
-import { mindbodyClient } from '../api/client';
+import { mindbodyClient } from '../api/client.js';
 
 // Get available services (class packages, memberships)
 export async function getServicesTool(

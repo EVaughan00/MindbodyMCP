@@ -1,5 +1,5 @@
-import { mindbodyClient } from '../api/client';
-import { classCache } from '../cache/index';
+import { mindbodyClient } from '../api/client.js';
+import { classCache } from '../cache/index.js';
 
 // Get clients with search and filtering
 export async function getClientsTool(

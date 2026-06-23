@@ -1,5 +1,5 @@
-import { mindbodyClient } from '../api/client';
-import { teacherCache, classCache } from '../cache/index';
+import { mindbodyClient } from '../api/client.js';
+import { teacherCache, classCache } from '../cache/index.js';
 import {
   GetStaffRequest,
   GetStaffResponse,
@@ -7,7 +7,7 @@ import {
   GetClassesResponse,
   Staff,
   TeacherSchedule,
-} from '../types/mindbody';
+} from '../types/mindbody.js';
 import {
   getToday,
   getWeekFromDate,
@@ -15,7 +15,7 @@ import {
   formatTime,
   getDurationInMinutes,
   getDateOnly,
-} from '../utils/dates';
+} from '../utils/dates.js';
 
 async function findTeacherByName(name: string): Promise<Staff | null> {
   const cacheKey = `teacher:${name.toLowerCase()}`;

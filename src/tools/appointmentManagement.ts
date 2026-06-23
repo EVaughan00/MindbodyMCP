@@ -1,4 +1,4 @@
-import { mindbodyClient } from '../api/client';
+import { mindbodyClient } from '../api/client.js';
 
 // Get appointments
 export async function getStaffAppointmentsTool(

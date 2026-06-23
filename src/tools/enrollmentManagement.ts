@@ -1,4 +1,4 @@
-import { mindbodyClient } from '../api/client';
+import { mindbodyClient } from '../api/client.js';
 
 // Get enrollments (courses, workshops, series)
 export async function getEnrollmentsTool(

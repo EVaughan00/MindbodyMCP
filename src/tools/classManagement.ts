@@ -1,11 +1,11 @@
-import { mindbodyClient } from '../api/client';
-import { classCache } from '../cache/index';
+import { mindbodyClient } from '../api/client.js';
+import { classCache } from '../cache/index.js';
 import {
   GetClassesRequest,
   GetClassesResponse,
   Class,
   ClassDescription,
-} from '../types/mindbody';
+} from '../types/mindbody.js';
 
 // Get all classes with filtering options
 export async function getClassesTool(
