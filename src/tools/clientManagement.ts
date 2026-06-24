@@ -1,5 +1,6 @@
 import { mindbodyClient } from '../api/client.js';
 import { classCache } from '../cache/index.js';
+import { getServiceCatalog, isActiveService } from './classification.js';
 
 // Get clients with search and filtering
 export async function getClientsTool(
@@ -403,6 +404,9 @@ export async function getClientContractsTool(
     soldDate: string;
     startDate: string;
     endDate?: string;
+    terminationDate?: string;
+    autoRenewing?: boolean;
+    isMonthToMonth?: boolean;
     autopayStatus?: string;
     balance?: number;
     contractType: string;
@@ -423,6 +427,10 @@ export async function getClientContractsTool(
     soldDate: contract.SoldDate,
     startDate: contract.StartDate,
     endDate: contract.EndDate,
+    // Churn signal — RepFlow treats a set TerminationDate as contract churn.
+    terminationDate: contract.TerminationDate,
+    autoRenewing: contract.AutoRenewing,
+    isMonthToMonth: contract.IsMonthToMonth,
     autopayStatus: contract.AutopayStatus,
     balance: contract.Balance,
     contractType: contract.ContractType,
@@ -432,5 +440,61 @@ export async function getClientContractsTool(
   return {
     contracts,
     totalContracts: contracts.length,
+  };
+}
+
+// Get a client's purchased services (intro offers, class packs, etc.)
+// This is the core signal for the Lead-vs-Trialer split: an active intro
+// ClientService = trialer. ProductId joins to the service catalog for IsIntroOffer.
+export async function getClientServicesTool(
+  clientId: string,
+  showActiveOnly: boolean = true
+): Promise<{
+  services: Array<{
+    id: number;
+    productId: number;
+    name: string;
+    remaining: number;
+    activeDate?: string;
+    expirationDate?: string;
+    paymentDate?: string;
+    current?: boolean;
+    isIntroOffer: boolean;
+    introOfferType?: string;
+    isActive: boolean;
+  }>;
+  totalServices: number;
+  activeIntroOfferCount: number;
+}> {
+  const [response, catalog] = await Promise.all([
+    mindbodyClient.get<any>('/client/clientservices', {
+      params: { ClientId: clientId, ShowActiveOnly: showActiveOnly },
+    }),
+    getServiceCatalog(),
+  ]);
+
+  const now = new Date();
+  const raw = response.ClientServices || [];
+  const services = raw.map((s: any) => {
+    const cat = catalog.get(s.ProductId);
+    return {
+      id: s.Id,
+      productId: s.ProductId,
+      name: s.Name,
+      remaining: s.Remaining,
+      activeDate: s.ActiveDate ?? s.ActivationDate,
+      expirationDate: s.ExpirationDate,
+      paymentDate: s.PaymentDate,
+      current: s.Current,
+      isIntroOffer: cat?.isIntroOffer ?? false,
+      introOfferType: cat?.introOfferType,
+      isActive: isActiveService(s, now),
+    };
+  });
+
+  return {
+    services,
+    totalServices: services.length,
+    activeIntroOfferCount: services.filter((s: any) => s.isIntroOffer && s.isActive).length,
   };
 }

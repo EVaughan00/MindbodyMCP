@@ -23,6 +23,8 @@ export async function getServicesTool(
     membershipId?: number;
     priority?: number;
     prerequisite?: string;
+    isIntroOffer: boolean;
+    introOfferType?: string;
   }>;
   totalServices: number;
 }> {
@@ -52,6 +54,9 @@ export async function getServicesTool(
     membershipId: service.MembershipId,
     priority: service.Priority,
     prerequisite: service.Prerequisite,
+    // Required to identify trial/intro offers — never guess by name.
+    isIntroOffer: !!service.IsIntroOffer,
+    introOfferType: service.IntroOfferType,
   }));
 
   return {
@@ -478,4 +483,192 @@ export async function getContractsTool(
     contracts,
     totalContracts: contracts.length,
   };
+}
+
+// --- Revenue ---------------------------------------------------------------
+
+const RECURRING_PATTERNS = /contract|membership|autopay|auto-pay|recurring|monthly|unlimited|emi|installment/i;
+const MAX_PAGES = 20; // safety cap on pagination (4000 records at 200/page)
+
+/** Classify a purchased item as recurring revenue (contract/autopay membership) vs not. */
+function isRecurringItem(item: any): boolean {
+  if (item?.IsContract === true || item?.AutopayStatus) return true;
+  const text = `${item?.Description ?? ''} ${item?.Name ?? ''}`;
+  return RECURRING_PATTERNS.test(text);
+}
+
+/** Best-effort per-item amount (sales payments aren't itemized in every account). */
+function itemAmount(item: any): number {
+  if (typeof item?.TotalAmount === 'number') return item.TotalAmount;
+  if (typeof item?.AmountPaid === 'number') return item.AmountPaid;
+  if (typeof item?.Price === 'number') return item.Price * (item?.Quantity || 1);
+  return 0;
+}
+
+async function fetchAllSales(startDate: string, endDate: string): Promise<{ sales: any[]; total: number; truncated: boolean }> {
+  const sales: any[] = [];
+  let offset = 0;
+  let total = 0;
+  let truncated = false;
+  for (let i = 0; i < MAX_PAGES; i++) {
+    const resp = await mindbodyClient.get<any>('/sale/sales', {
+      params: { StartSaleDateTime: startDate, EndSaleDateTime: endDate, Limit: 200, Offset: offset },
+    });
+    const batch = resp.Sales || [];
+    sales.push(...batch);
+    total = resp.PaginationResponse?.TotalResults ?? sales.length;
+    offset += batch.length;
+    if (batch.length === 0 || offset >= total) break;
+    if (i === MAX_PAGES - 1 && offset < total) truncated = true;
+  }
+  return { sales, total, truncated };
+}
+
+// Get raw sales in a window (gross sale value + what sold). Bounded + enveloped.
+export async function getSalesTool(
+  startDate: string,
+  endDate: string,
+  pageSize: number = 200
+): Promise<{
+  sales: Array<{
+    id: number;
+    saleDate: string;
+    clientId?: string;
+    locationId?: number;
+    total: number;
+    items: string[];
+  }>;
+  page: { returned: number; totalMatching: number; hasMore: boolean };
+}> {
+  const resp = await mindbodyClient.get<any>('/sale/sales', {
+    params: { StartSaleDateTime: startDate, EndSaleDateTime: endDate, Limit: Math.min(pageSize, 200) },
+  });
+  const raw = resp.Sales || [];
+  const total = resp.PaginationResponse?.TotalResults ?? raw.length;
+  const sales = raw.map((s: any) => ({
+    id: s.Id,
+    saleDate: s.SaleDateTime ?? s.SaleDate,
+    clientId: s.ClientId,
+    locationId: s.LocationId,
+    total: (s.Payments || []).reduce((sum: number, p: any) => sum + (p.Amount || 0), 0),
+    items: (s.PurchasedItems || []).map((it: any) => it.Description ?? it.Name).filter(Boolean),
+  }));
+  return {
+    sales,
+    page: { returned: sales.length, totalMatching: total, hasMore: sales.length < total },
+  };
+}
+
+// Get raw transactions in a window (money actually collected; Settled = reconciled).
+export async function getTransactionsTool(
+  startDate: string,
+  endDate: string
+): Promise<{
+  transactions: Array<{
+    id: number;
+    time: string;
+    amount: number;
+    status?: string;
+    settled: boolean;
+    saleId?: number;
+    clientId?: string;
+  }>;
+  page: { returned: number; totalMatching: number; hasMore: boolean };
+}> {
+  const resp = await mindbodyClient.get<any>('/sale/transactions', {
+    params: { StartDateTime: startDate, EndDateTime: endDate, Limit: 200 },
+  });
+  const raw = resp.Transactions || [];
+  const total = resp.PaginationResponse?.TotalResults ?? raw.length;
+  const transactions = raw.map((t: any) => ({
+    id: t.TransactionId ?? t.Id,
+    time: t.TransactionTime,
+    amount: t.Amount ?? 0,
+    status: t.Status,
+    settled: t.Settled === true || t.Settled === 'true',
+    saleId: t.SaleId,
+    clientId: t.ClientId,
+  }));
+  return {
+    transactions,
+    page: { returned: transactions.length, totalMatching: total, hasMore: transactions.length < total },
+  };
+}
+
+// Aggregate revenue for a window. Returns the metric, never the rows.
+// gross = sum of sale payments; collected = sum of settled transactions;
+// recurring vs nonRecurring split is a best-effort item classification.
+export async function getSalesSummaryTool(
+  startDate: string,
+  endDate: string,
+  revenueType: 'all' | 'recurring' | 'nonrecurring' = 'all'
+): Promise<{
+  window: { startDate: string; endDate: string };
+  gross: number;
+  collected: number;
+  recurring: number | null;
+  nonRecurring: number | null;
+  salesCount: number;
+  truncated: boolean;
+  note?: string;
+}> {
+  const { sales, total, truncated } = await fetchAllSales(startDate, endDate);
+
+  let gross = 0;
+  let recurring = 0;
+  let nonRecurring = 0;
+  let itemAmountsSeen = false;
+
+  for (const s of sales) {
+    const saleGross = (s.Payments || []).reduce((sum: number, p: any) => sum + (p.Amount || 0), 0);
+    gross += saleGross;
+    for (const item of s.PurchasedItems || []) {
+      const amt = itemAmount(item);
+      if (amt) itemAmountsSeen = true;
+      if (isRecurringItem(item)) recurring += amt;
+      else nonRecurring += amt;
+    }
+  }
+
+  // Collected (settled) from transactions in the window.
+  let collected = 0;
+  try {
+    let offset = 0;
+    for (let i = 0; i < MAX_PAGES; i++) {
+      const resp = await mindbodyClient.get<any>('/sale/transactions', {
+        params: { StartDateTime: startDate, EndDateTime: endDate, Limit: 200, Offset: offset },
+      });
+      const batch = resp.Transactions || [];
+      for (const t of batch) {
+        if (t.Settled === true || t.Settled === 'true') collected += t.Amount || 0;
+      }
+      const tTotal = resp.PaginationResponse?.TotalResults ?? batch.length;
+      offset += batch.length;
+      if (batch.length === 0 || offset >= tTotal) break;
+    }
+  } catch {
+    collected = 0;
+  }
+
+  const hasSplit = itemAmountsSeen;
+  const result = {
+    window: { startDate, endDate },
+    gross: round2(gross),
+    collected: round2(collected),
+    recurring: hasSplit ? round2(recurring) : null,
+    nonRecurring: hasSplit ? round2(nonRecurring) : null,
+    salesCount: total,
+    truncated,
+    note: hasSplit
+      ? 'recurring/nonRecurring is a best-effort split by item type/description.'
+      : 'Per-item amounts unavailable in this account; recurring split omitted (gross/collected are exact).',
+  };
+
+  if (revenueType === 'recurring') return { ...result, nonRecurring: null };
+  if (revenueType === 'nonrecurring') return { ...result, recurring: null };
+  return result;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }

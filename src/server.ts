@@ -25,6 +25,7 @@ import {
   addClientArrivalTool,
   getClientAccountBalancesTool,
   getClientContractsTool,
+  getClientServicesTool,
 } from './tools/clientManagement.js';
 import {
   getServicesTool,
@@ -33,7 +34,11 @@ import {
   checkoutShoppingCartTool,
   purchaseContractTool,
   getContractsTool,
+  getSalesTool,
+  getTransactionsTool,
+  getSalesSummaryTool,
 } from './tools/salesManagement.js';
+import { classifyClientTool } from './tools/classification.js';
 import {
   getSitesTool,
   getLocationsTool,
@@ -305,7 +310,30 @@ export const toolDefinitions = [
   },
   {
     name: 'getClientContracts',
-    description: "Get client's contracts/memberships",
+    description: "Get client's contracts/memberships, including TerminationDate (contract churn signal) and autoRenewing",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        clientId: { type: 'string', description: 'Client ID' },
+      },
+      required: ['clientId'],
+    },
+  },
+  {
+    name: 'getClientServices',
+    description: "Get a client's purchased services (intro offers, class packs). Each service is joined to the catalog for isIntroOffer; an active intro service means the client is a trialer. Set showActiveOnly=false to include recently-expired intros.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        clientId: { type: 'string', description: 'Client ID' },
+        showActiveOnly: { type: 'boolean', description: 'Only active services (default true). Set false to include recently-lapsed intros.' },
+      },
+      required: ['clientId'],
+    },
+  },
+  {
+    name: 'classifyClient',
+    description: "Classify a client's lifecycle stage: lead, trialer, member, lapsed (churned), external (3rd-party like ClassPass), or inactive. Mirrors RepFlow's rules. Returns the status plus the signals behind it. Use for 'what kind of client is X' questions.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -424,6 +452,44 @@ export const toolDefinitions = [
         locationId: { type: 'number', description: 'Location ID' },
       },
       required: ['clientId', 'contractId', 'startDate'],
+    },
+  },
+  {
+    name: 'getSalesSummary',
+    description: "Aggregate revenue for a date window: { gross, collected, recurring, nonRecurring, salesCount }. Returns the metric, not the rows — use this for 'how much did we make' questions instead of getSales.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Start date YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date YYYY-MM-DD' },
+        revenueType: { type: 'string', enum: ['all', 'recurring', 'nonrecurring'], description: 'Filter the split (default all)' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+  },
+  {
+    name: 'getSales',
+    description: 'Get raw sales in a date window (gross value + what sold). Paginated/enveloped. Prefer getSalesSummary for metrics.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Start date YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date YYYY-MM-DD' },
+        pageSize: { type: 'number', description: 'Rows per page (max 200)' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+  },
+  {
+    name: 'getTransactions',
+    description: 'Get raw payment transactions in a date window (Amount + Settled = money actually collected). Use for reconciliation.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Start date YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date YYYY-MM-DD' },
+      },
+      required: ['startDate', 'endDate'],
     },
   },
   // Site & Location Tools
@@ -672,6 +738,10 @@ export async function callTool(name: string, args: any): Promise<any> {
       return getClientAccountBalancesTool(args.clientId);
     case 'getClientContracts':
       return getClientContractsTool(args.clientId);
+    case 'getClientServices':
+      return getClientServicesTool(args.clientId, args.showActiveOnly);
+    case 'classifyClient':
+      return classifyClientTool(args.clientId);
     case 'getServices':
       return getServicesTool(args.programIds, args.sessionTypeIds, args.locationId, args.classId, args.hideRelatedPrograms);
     case 'getPackages':
@@ -684,6 +754,12 @@ export async function callTool(name: string, args: any): Promise<any> {
       return checkoutShoppingCartTool(args.clientId, args.items, args.payments, args.inStore, args.promotionCode, args.sendEmail, args.locationId);
     case 'purchaseContract':
       return purchaseContractTool(args.clientId, args.contractId, args.startDate, args.firstPaymentOccurs, args.clientSignature, args.promotionCode, args.locationId);
+    case 'getSalesSummary':
+      return getSalesSummaryTool(args.startDate, args.endDate, args.revenueType);
+    case 'getSales':
+      return getSalesTool(args.startDate, args.endDate, args.pageSize);
+    case 'getTransactions':
+      return getTransactionsTool(args.startDate, args.endDate);
     case 'getSites':
       return getSitesTool();
     case 'getLocations':
