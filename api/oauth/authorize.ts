@@ -32,6 +32,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (responseType !== 'code') {
     return redirectError(res, redirectUri, state, 'unsupported_response_type');
   }
+  // Require PKCE (S256). Without it, an intercepted auth code is redeemable with
+  // no proof-of-possession. Claude's connector always sends S256.
+  if (!codeChallenge || codeChallengeMethod === 'plain') {
+    return res.status(400).send(errorPage('This server requires PKCE with S256 (no code_challenge was provided).'));
+  }
 
   // --- GET: show the login form --------------------------------------------
   if (req.method !== 'POST') {

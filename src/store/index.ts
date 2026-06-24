@@ -67,6 +67,7 @@ export function tenantToPublic(t: Tenant): TenantPublic {
 
 export function tenantToCreds(t: Tenant): TenantCreds {
   return {
+    id: t.id,
     apiKey: t.mindbodyApiKey,
     siteId: t.mindbodySiteId,
     sourceName: t.mindbodySourceName,

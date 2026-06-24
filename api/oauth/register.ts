@@ -23,6 +23,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  // Only allow https callbacks (or http on loopback for local dev). Prevents an
+  // attacker from registering a client that exfiltrates a studio's auth code.
+  const isAllowedRedirect = (u: string): boolean => {
+    try {
+      const url = new URL(u);
+      if (url.protocol === 'https:') return true;
+      if (url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')) return true;
+      return false;
+    } catch {
+      return false;
+    }
+  };
+  if (!redirectUris.every(isAllowedRedirect)) {
+    return res.status(400).json({
+      error: 'invalid_redirect_uri',
+      error_description: 'redirect_uris must be https (or http://localhost for development)',
+    });
+  }
+
   const requestedAuthMethod: string = body.token_endpoint_auth_method || 'none';
   const tokenEndpointAuthMethod = requestedAuthMethod === 'none' ? 'none' : 'client_secret_post';
 

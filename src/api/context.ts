@@ -8,6 +8,8 @@ import { AsyncLocalStorage } from 'async_hooks';
  * async context, so `getTenantCreds()` falls back to process.env (single-tenant).
  */
 export interface TenantCreds {
+  /** Stable tenant id (used for cache/token isolation; never the mutable creds) */
+  id?: string;
   /** Mindbody Api-Key header value */
   apiKey: string;
   /** Mindbody SiteId header value */
@@ -41,8 +43,12 @@ export function getTenantCreds(): TenantCreds {
   };
 }
 
-/** Stable per-tenant namespace used for token + cache isolation. */
+/**
+ * Stable per-tenant namespace for token + cache isolation. Prefers the immutable
+ * tenant id so two tenants can never collide (e.g. on blank/duplicate creds).
+ */
 export function getTenantNamespace(): string {
   const creds = getTenantCreds();
+  if (creds.id) return `t:${creds.id}`;
   return `${creds.apiKey}:${creds.siteId}`;
 }

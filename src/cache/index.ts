@@ -48,8 +48,13 @@ export class SimpleCache {
     return this.get(key) !== null;
   }
 
+  // Clear only the active tenant's entries — a write by one studio must never
+  // flush another studio's cache on a shared warm instance.
   clear(): void {
-    this.cache.clear();
+    const prefix = `${getTenantNamespace()}::`;
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) this.cache.delete(key);
+    }
   }
 
   delete(key: string): void {
