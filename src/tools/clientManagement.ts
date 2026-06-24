@@ -476,7 +476,7 @@ export async function getClientServicesTool(
   const now = new Date();
   const raw = response.ClientServices || [];
   const services = raw.map((s: any) => {
-    const cat = catalog.get(s.ProductId);
+    const cat = catalog.get(Number(s.ProductId));
     return {
       id: s.Id,
       productId: s.ProductId,

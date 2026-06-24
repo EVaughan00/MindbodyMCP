@@ -490,6 +490,15 @@ export async function getContractsTool(
 const RECURRING_PATTERNS = /contract|membership|autopay|auto-pay|recurring|monthly|unlimited|emi|installment/i;
 const MAX_PAGES = 20; // safety cap on pagination (4000 records at 200/page)
 
+// /sale/transactions ignores date-only values and defaults to "today"; it
+// requires a full datetime. Normalize bare dates to a full-day ISO range.
+function toStartDateTime(d: string): string {
+  return d.includes('T') ? d : `${d}T00:00:00Z`;
+}
+function toEndDateTime(d: string): string {
+  return d.includes('T') ? d : `${d}T23:59:59Z`;
+}
+
 /** Classify a purchased item as recurring revenue (contract/autopay membership) vs not. */
 function isRecurringItem(item: any): boolean {
   if (item?.IsContract === true || item?.AutopayStatus) return true;
@@ -576,7 +585,7 @@ export async function getTransactionsTool(
   page: { returned: number; totalMatching: number; hasMore: boolean };
 }> {
   const resp = await mindbodyClient.get<any>('/sale/transactions', {
-    params: { StartDateTime: startDate, EndDateTime: endDate, Limit: 200 },
+    params: { StartDateTime: toStartDateTime(startDate), EndDateTime: toEndDateTime(endDate), Limit: 200 },
   });
   const raw = resp.Transactions || [];
   const total = resp.PaginationResponse?.TotalResults ?? raw.length;
@@ -605,7 +614,7 @@ export async function getSalesSummaryTool(
 ): Promise<{
   window: { startDate: string; endDate: string };
   gross: number;
-  collected: number;
+  collected: number | null;
   recurring: number | null;
   nonRecurring: number | null;
   salesCount: number;
@@ -630,38 +639,20 @@ export async function getSalesSummaryTool(
     }
   }
 
-  // Collected (settled) from transactions in the window.
-  let collected = 0;
-  try {
-    let offset = 0;
-    for (let i = 0; i < MAX_PAGES; i++) {
-      const resp = await mindbodyClient.get<any>('/sale/transactions', {
-        params: { StartDateTime: startDate, EndDateTime: endDate, Limit: 200, Offset: offset },
-      });
-      const batch = resp.Transactions || [];
-      for (const t of batch) {
-        if (t.Settled === true || t.Settled === 'true') collected += t.Amount || 0;
-      }
-      const tTotal = resp.PaginationResponse?.TotalResults ?? batch.length;
-      offset += batch.length;
-      if (batch.length === 0 || offset >= tTotal) break;
-    }
-  } catch {
-    collected = 0;
-  }
-
   const hasSplit = itemAmountsSeen;
   const result = {
     window: { startDate, endDate },
     gross: round2(gross),
-    collected: round2(collected),
+    // Settlement reconciliation lives in /sale/transactions (use getTransactions),
+    // whose date filtering is unreliable, so it's intentionally not summed here.
+    collected: null as number | null,
     recurring: hasSplit ? round2(recurring) : null,
     nonRecurring: hasSplit ? round2(nonRecurring) : null,
     salesCount: total,
     truncated,
     note: hasSplit
-      ? 'recurring/nonRecurring is a best-effort split by item type/description.'
-      : 'Per-item amounts unavailable in this account; recurring split omitted (gross/collected are exact).',
+      ? 'gross + recurring/nonRecurring from /sale/sales (exact). collected (settled) omitted — use getTransactions for reconciliation.'
+      : 'gross from /sale/sales (exact); per-item amounts unavailable so recurring split omitted.',
   };
 
   if (revenueType === 'recurring') return { ...result, nonRecurring: null };

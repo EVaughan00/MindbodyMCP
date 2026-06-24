@@ -92,9 +92,11 @@ export async function getServiceCatalog(): Promise<Map<number, { isIntroOffer: b
     generalCache.set('service-catalog', services, 60);
   }
 
+  // /sale/services returns Id as a string, but ClientService.ProductId is a
+  // number — normalize both to Number so the join actually matches.
   const map = new Map<number, { isIntroOffer: boolean; introOfferType?: string; name?: string; price?: number }>();
   for (const s of services) {
-    map.set(s.Id, {
+    map.set(Number(s.Id), {
       isIntroOffer: !!s.IsIntroOffer,
       introOfferType: s.IntroOfferType,
       name: s.Name,
@@ -142,7 +144,7 @@ export function classifyStatus(
 
   const hasAutoRenewingActiveContract = contracts.some((c) => c.AutoRenewing && isActiveContract(c, now));
   const pendingStart = pendingMembershipStart(contracts, now);
-  const hasActiveIntroService = services.some((s) => catalog.get(s.ProductId)?.isIntroOffer && isActiveService(s, now));
+  const hasActiveIntroService = services.some((s) => catalog.get(Number(s.ProductId))?.isIntroOffer && isActiveService(s, now));
   const hasActiveMembership = memberships.some((m) => isActiveMembership(m, now));
   const hasThirdParty = services.some((s) => matchesThirdParty(s.Name));
   const terminatedContract = contracts.some((c) => {
