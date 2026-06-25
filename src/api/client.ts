@@ -45,7 +45,10 @@ class MindbodyApiClient {
       return response.data;
     } catch (error: any) {
       if (retries < this.maxRetries && this.shouldRetry(error)) {
-        await this.delay(this.retryDelay * Math.pow(2, retries));
+        // Honor Retry-After on 429s; otherwise exponential backoff.
+        const retryAfter = this.retryAfterMs(error);
+        const wait = retryAfter ?? this.retryDelay * Math.pow(2, retries);
+        await this.delay(wait);
         return this.request<T>(config, retries + 1);
       }
 
@@ -54,9 +57,27 @@ class MindbodyApiClient {
   }
 
   private shouldRetry(error: any): boolean {
-    // Retry on network errors or 5xx errors, but NOT on 401/403 auth errors
+    // Retry on network errors, 5xx errors, or 429 rate limits — but NOT on
+    // 401/403 auth errors. 429 matters for heavy paginating tools (e.g. the
+    // milestone scan), which can otherwise burst past the 2000 req/hr cap.
     if (!error.response) return true;
-    return error.response.status >= 500;
+    const status = error.response.status;
+    return status === 429 || status >= 500;
+  }
+
+  // Cap any single retry wait. Mindbody's 429 Retry-After can be the seconds
+  // until the hourly-quota reset (hundreds/thousands of seconds); honoring that
+  // verbatim would hang every in-flight worker past the 60s serverless limit and
+  // return an opaque timeout. We cap the wait so the request instead exhausts its
+  // retries quickly and surfaces a readable rate-limit error.
+  private readonly maxRetryWaitMs = 8000;
+
+  private retryAfterMs(error: any): number | null {
+    if (error.response?.status !== 429) return null;
+    const header = error.response.headers?.['retry-after'];
+    const seconds = Number(header);
+    const wait = Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 2000;
+    return Math.min(wait, this.maxRetryWaitMs);
   }
 
   private delay(ms: number): Promise<void> {

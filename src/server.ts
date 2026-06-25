@@ -39,7 +39,7 @@ import {
   getSalesSummaryTool,
 } from './tools/salesManagement.js';
 import { classifyClientTool } from './tools/classification.js';
-import { getNewClientsTool, getSignupsTool, getActiveMembersTool } from './tools/reporting.js';
+import { getNewClientsTool, getSignupsTool, getActiveMembersTool, getMilestoneClientsTool, getNewContractsTool, getTerminatedMembersTool } from './tools/reporting.js';
 import {
   getSitesTool,
   getLocationsTool,
@@ -495,7 +495,7 @@ export const toolDefinitions = [
   },
   {
     name: 'getNewClients',
-    description: "Count + list all clients whose profile was created in a date window (full roster, not a page). Answers 'how many clients were created/joined in June'. Returns counts by current status too.",
+    description: "Count + list all clients (leads) whose profile was created in a date window. Answers 'how many leads/clients registered in June'. Cost-aware: scans only clients modified since the window opened (created ⊆ modified), not the full roster. Returns counts by current status too.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -518,13 +518,62 @@ export const toolDefinitions = [
     },
   },
   {
+    name: 'getNewContracts',
+    description: "TRUE new contract signups in a window vs autopay charges. A sale line with a ContractId includes recurring autopay, so getSignups.contract overcounts; this resolves each contract's StartDate (origination) and returns newContractCount (real signups, incl post-dated) + autopayChargeCount. Use this for 'how many NEW contracts/memberships did we sign in June'.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Start date YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date YYYY-MM-DD' },
+        lookbackDays: { type: 'number', description: 'Days before start to scan for post-dated signups (default 45)' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+  },
+  {
     name: 'getActiveMembers',
-    description: "All clients with an active membership now (total count + roster), via the bulk memberships endpoint — no per-client looping. Optional window counts memberships whose current-period ActiveDate falls in it, but that INCLUDES autopay renewals (a recurring membership's ActiveDate rolls forward each cycle), so it is NOT a clean new-member count. For true new members excluding renewals, that needs the RepFlow backend's status-transition history.",
+    description: "All clients with an active membership now (total + roster) via the bulk memberships endpoint — no per-client looping. Each member row mirrors the studio's Active Members report: pricing option (membership), derived membershipTier, remainingSessions, nextAutopayDate, joinedDate, phone, email, expirationDate. Optional window adds: membershipsActivatedInWindow (current-period ActiveDate in window — INCLUDES autopay renewals, OVERCOUNTS joins) and newMembersInWindow (member whose profile was created in window — a cleaner 'joined' count). For new contract/autopay members specifically, prefer getNewContracts.",
     inputSchema: {
       type: 'object',
       properties: {
         startDate: { type: 'string', description: 'Optional window start YYYY-MM-DD' },
         endDate: { type: 'string', description: 'Optional window end YYYY-MM-DD' },
+      },
+    },
+  },
+  {
+    name: 'getTerminatedMembers',
+    description: "Clients who TERMINATED (churned) in a date window — answers 'how many members terminated in June'. Uses LastModifiedDate as a scalable pre-filter (terminating a contract modifies the client record), then reads each candidate's contracts for a ClientContract.TerminationDate inside the window (the churn signal RepFlow uses). Returns name, membershipTier, contract, terminatedOn, joinedOn, phone, email. Cached 60m; bounded so it never blows the rate limit. NOTE: Reason, Missed Revenue, and Lifetime Sales (columns in the studio's export) are RepFlow-computed and not available from the Mindbody API.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Window start YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'Window end YYYY-MM-DD' },
+        lookbackDays: { type: 'number', description: 'Days before start to widen the modified-since candidate scan (default 7). Raise to catch terminations entered well before the window.' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+  },
+  {
+    name: 'getMilestoneClients',
+    description:
+      "Flag clients whose lifetime ATTENDED-class count sits on a milestone (default 99/199/299/399/499) — i.e. their NEXT class is the celebratory 100th/200th/etc. Counts only signed-in visits (no-shows/late-cancels excluded). Only considers clients who ATTENDED in the recent lookback window (default 30 days) — the only ones whose count could have just changed — so cost scales with recent attendance, NOT the 5,000+ roster. HEAVY on a cold run (~1 call per recent attendee plus the class feed); result cached 24h. Returns each flagged client's name, current attended count, the milestone, and their upcoming class number.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        milestones: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'Milestone numbers to flag (default [99,199,299,399,499]). A client is flagged when their attended count equals one of these.',
+        },
+        proximity: {
+          type: 'number',
+          description: 'How many classes below a milestone still counts. 0 (default) = exactly on the milestone (one class away from the round number); e.g. 4 flags 95-99, 195-199, etc.',
+        },
+        lookbackDays: {
+          type: 'number',
+          description: 'How far back (in days) recent attendance qualifies a client as a candidate. Default 30. Lower it (e.g. 2) for cheap frequent runs; raise it to widen the net.',
+        },
       },
     },
   },
@@ -780,10 +829,16 @@ export async function callTool(name: string, args: any): Promise<any> {
       return classifyClientTool(args.clientId);
     case 'getNewClients':
       return getNewClientsTool(args.startDate, args.endDate);
+    case 'getNewContracts':
+      return getNewContractsTool(args.startDate, args.endDate, args.lookbackDays);
     case 'getSignups':
       return getSignupsTool(args.startDate, args.endDate);
     case 'getActiveMembers':
       return getActiveMembersTool(args.startDate, args.endDate);
+    case 'getTerminatedMembers':
+      return getTerminatedMembersTool(args.startDate, args.endDate, args.lookbackDays);
+    case 'getMilestoneClients':
+      return getMilestoneClientsTool({ milestones: args.milestones, proximity: args.proximity, lookbackDays: args.lookbackDays });
     case 'getServices':
       return getServicesTool(args.programIds, args.sessionTypeIds, args.locationId, args.classId, args.hideRelatedPrograms);
     case 'getPackages':

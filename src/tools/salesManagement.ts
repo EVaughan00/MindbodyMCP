@@ -1,4 +1,5 @@
 import { mindbodyClient } from '../api/client.js';
+import { membershipTier } from './reporting.js';
 
 // Get available services (class packages, memberships)
 export async function getServicesTool(
@@ -619,6 +620,7 @@ export async function getSalesSummaryTool(
   nonRecurring: number | null;
   salesCount: number;
   truncated: boolean;
+  byService: Array<{ service: string; tier: string; amount: number; quantity: number }>;
   note?: string;
 }> {
   const { sales, total, truncated } = await fetchAllSales(startDate, endDate);
@@ -627,6 +629,10 @@ export async function getSalesSummaryTool(
   let recurring = 0;
   let nonRecurring = 0;
   let itemAmountsSeen = false;
+  // Sales-by-service breakdown (mirrors the studio's "Sales by Service" export):
+  // group every purchased line by pricing-option name, netting returns/refunds
+  // (negative TotalAmount/Quantity) so the totals reconcile to the report.
+  const serviceAgg = new Map<string, { amount: number; quantity: number }>();
 
   for (const s of sales) {
     const saleGross = (s.Payments || []).reduce((sum: number, p: any) => sum + (p.Amount || 0), 0);
@@ -636,8 +642,18 @@ export async function getSalesSummaryTool(
       if (amt) itemAmountsSeen = true;
       if (isRecurringItem(item)) recurring += amt;
       else nonRecurring += amt;
+
+      const svc = String(item.Description ?? item.Name ?? 'Unknown');
+      const agg = serviceAgg.get(svc) ?? { amount: 0, quantity: 0 };
+      agg.amount += amt;
+      agg.quantity += item.Quantity ?? 1; // returns carry a negative quantity
+      serviceAgg.set(svc, agg);
     }
   }
+
+  const byService = Array.from(serviceAgg.entries())
+    .map(([service, v]) => ({ service, tier: membershipTier(service), amount: round2(v.amount), quantity: v.quantity }))
+    .sort((a, b) => b.amount - a.amount);
 
   const hasSplit = itemAmountsSeen;
   const result = {
@@ -650,9 +666,12 @@ export async function getSalesSummaryTool(
     nonRecurring: hasSplit ? round2(nonRecurring) : null,
     salesCount: total,
     truncated,
+    // Only expose the per-service breakdown when item amounts are real — without
+    // them every row's amount is 0, which reads as a (false) "sold for $0" table.
+    byService: hasSplit ? byService : [],
     note: hasSplit
-      ? 'gross + recurring/nonRecurring from /sale/sales (exact). collected (settled) omitted — use getTransactions for reconciliation.'
-      : 'gross from /sale/sales (exact); per-item amounts unavailable so recurring split omitted.',
+      ? 'gross + recurring/nonRecurring + byService from /sale/sales (exact). collected (settled) omitted — use getTransactions for reconciliation.'
+      : 'gross from /sale/sales (exact); per-item amounts unavailable so recurring split and byService omitted.',
   };
 
   if (revenueType === 'recurring') return { ...result, nonRecurring: null };

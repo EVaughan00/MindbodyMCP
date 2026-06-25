@@ -212,7 +212,87 @@ export async function updateClientTool(
   }
 }
 
-// Get client visits (attendance history)
+// --- Client visits pagination -------------------------------------------------
+// Mindbody's /client/clientvisits caps each page at 200 and reports the true
+// total in PaginationResponse.TotalResults. The previous implementation pulled
+// only page 1, so any client with >200 visits in the window was silently
+// truncated (and totalVisits under-reported). This helper walks every page.
+
+const VISITS_PAGE = 200;
+const VISITS_MAX_PAGES = 30; // safety cap: 6,000 visits/client before we flag truncation
+
+/**
+ * Fetch ALL of a client's raw visit records across a date window, paginating
+ * until PaginationResponse.TotalResults is satisfied. Returns the raw Mindbody
+ * visit objects plus the API-reported total and a truncated flag (true only if
+ * a client exceeds VISITS_MAX_PAGES of history — practically never).
+ */
+export async function fetchAllClientVisits(
+  clientId: string,
+  startDate: string,
+  endDate: string
+): Promise<{ visits: any[]; apiReportedTotal: number; truncated: boolean }> {
+  const visits: any[] = [];
+  let offset = 0;
+  let apiReportedTotal = 0;
+  let truncated = false;
+
+  for (let page = 0; page < VISITS_MAX_PAGES; page++) {
+    const resp = await mindbodyClient.get<any>('/client/clientvisits', {
+      params: { ClientId: clientId, StartDate: startDate, EndDate: endDate, Limit: VISITS_PAGE, Offset: offset },
+    });
+    const batch: any[] = resp.Visits || [];
+    apiReportedTotal = resp.PaginationResponse?.TotalResults ?? offset + batch.length;
+    visits.push(...batch);
+    offset += batch.length;
+
+    if (batch.length === 0 || offset >= apiReportedTotal) break;
+    if (page === VISITS_MAX_PAGES - 1 && offset < apiReportedTotal) truncated = true;
+  }
+
+  return { visits, apiReportedTotal, truncated };
+}
+
+/**
+ * Count a client's ATTENDED (SignedIn) visits across a window, paging only as
+ * far as needed. `stopAbove` lets the milestone scan bail the moment a client is
+ * provably past the top milestone (e.g. once attended > 499 they can't be sitting
+ * on 99/199/…/499), so high-frequency clients cost ~3 calls instead of many.
+ *
+ * Returns `exceeded: true` when paging stopped early because attended passed
+ * stopAbove (so `attended` is a partial lower bound, known to be > stopAbove).
+ */
+export async function countClientAttendedVisits(
+  clientId: string,
+  startDate: string,
+  endDate: string,
+  stopAbove: number = Infinity
+): Promise<{ attended: number; apiReportedTotal: number; exceeded: boolean; truncated: boolean; apiCalls: number }> {
+  let attended = 0;
+  let offset = 0;
+  let apiReportedTotal = 0;
+  let truncated = false;
+  let apiCalls = 0;
+
+  for (let page = 0; page < VISITS_MAX_PAGES; page++) {
+    const resp = await mindbodyClient.get<any>('/client/clientvisits', {
+      params: { ClientId: clientId, StartDate: startDate, EndDate: endDate, Limit: VISITS_PAGE, Offset: offset },
+    });
+    apiCalls++;
+    const batch: any[] = resp.Visits || [];
+    apiReportedTotal = resp.PaginationResponse?.TotalResults ?? offset + batch.length;
+    for (const v of batch) if (v.SignedIn) attended++;
+    offset += batch.length;
+
+    if (attended > stopAbove) return { attended, apiReportedTotal, exceeded: true, truncated: false, apiCalls };
+    if (batch.length === 0 || offset >= apiReportedTotal) break;
+    if (page === VISITS_MAX_PAGES - 1 && offset < apiReportedTotal) truncated = true;
+  }
+
+  return { attended, apiReportedTotal, exceeded: false, truncated, apiCalls };
+}
+
+// Get client visits (attendance history) — now fully paginated.
 export async function getClientVisitsTool(
   clientId: string,
   startDate?: string,
@@ -233,6 +313,8 @@ export async function getClientVisitsTool(
     serviceName?: string;
   }>;
   totalVisits: number;
+  apiReportedTotal: number;
+  truncated: boolean;
   summary: {
     totalAttended: number;
     totalNoShows: number;
@@ -242,16 +324,17 @@ export async function getClientVisitsTool(
     byInstructor: Record<string, number>;
   };
 }> {
-  const response = await mindbodyClient.get<any>('/client/clientvisits', {
-    params: {
-      ClientId: clientId,
-      StartDate: startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      EndDate: endDate || new Date().toISOString().split('T')[0],
-      Limit: 200,
-    },
-  });
+  const resolvedStart =
+    startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const resolvedEnd = endDate || new Date().toISOString().split('T')[0];
 
-  const visits = response.Visits.map((visit: any) => ({
+  const { visits: rawVisits, apiReportedTotal, truncated } = await fetchAllClientVisits(
+    clientId,
+    resolvedStart,
+    resolvedEnd
+  );
+
+  const visits = rawVisits.map((visit: any) => ({
     id: visit.Id,
     classId: visit.ClassId,
     className: visit.Name,
@@ -287,6 +370,8 @@ export async function getClientVisitsTool(
   return {
     visits,
     totalVisits: visits.length,
+    apiReportedTotal,
+    truncated,
     summary,
   };
 }
