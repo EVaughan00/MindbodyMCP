@@ -4,6 +4,9 @@
   "buildCommand": null,
   "installCommand": "npm install",
   "outputDirectory": "public",
+  "functions": {
+    "api/mcp.ts": { "maxDuration": 60 }
+  },
   "rewrites": [
     { "source": "/.well-known/oauth-protected-resource", "destination": "/api/well-known/protected-resource" },
     { "source": "/.well-known/oauth-protected-resource/(.*)", "destination": "/api/well-known/protected-resource" },

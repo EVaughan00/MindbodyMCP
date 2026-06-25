@@ -39,6 +39,7 @@ import {
   getSalesSummaryTool,
 } from './tools/salesManagement.js';
 import { classifyClientTool } from './tools/classification.js';
+import { getNewClientsTool, getSignupsTool, getActiveMembersTool } from './tools/reporting.js';
 import {
   getSitesTool,
   getLocationsTool,
@@ -492,6 +493,41 @@ export const toolDefinitions = [
       required: ['startDate', 'endDate'],
     },
   },
+  {
+    name: 'getNewClients',
+    description: "Count + list all clients whose profile was created in a date window (full roster, not a page). Answers 'how many clients were created/joined in June'. Returns counts by current status too.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Start date YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date YYYY-MM-DD' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+  },
+  {
+    name: 'getSignups',
+    description: "Everything sold in a date window, classified into trials / contracts / memberships / packages / retail (full sales pagination — never misses records). Answers 'how many trials/contracts/memberships started in June'. Each trial/contract/membership row includes the client and a newClient flag (profile created in the same window = fresh vs returning).",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Start date YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date YYYY-MM-DD' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+  },
+  {
+    name: 'getActiveMembers',
+    description: "All clients with an active membership now (total count + roster), via the bulk memberships endpoint — no per-client looping. Optional window counts memberships whose current-period ActiveDate falls in it, but that INCLUDES autopay renewals (a recurring membership's ActiveDate rolls forward each cycle), so it is NOT a clean new-member count. For true new members excluding renewals, that needs the RepFlow backend's status-transition history.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Optional window start YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'Optional window end YYYY-MM-DD' },
+      },
+    },
+  },
   // Site & Location Tools
   {
     name: 'getSites',
@@ -742,6 +778,12 @@ export async function callTool(name: string, args: any): Promise<any> {
       return getClientServicesTool(args.clientId, args.showActiveOnly);
     case 'classifyClient':
       return classifyClientTool(args.clientId);
+    case 'getNewClients':
+      return getNewClientsTool(args.startDate, args.endDate);
+    case 'getSignups':
+      return getSignupsTool(args.startDate, args.endDate);
+    case 'getActiveMembers':
+      return getActiveMembersTool(args.startDate, args.endDate);
     case 'getServices':
       return getServicesTool(args.programIds, args.sessionTypeIds, args.locationId, args.classId, args.hideRelatedPrograms);
     case 'getPackages':
