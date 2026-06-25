@@ -557,7 +557,7 @@ export const toolDefinitions = [
   {
     name: 'getMilestoneClients',
     description:
-      "Flag clients whose lifetime ATTENDED-class count sits on a milestone (default 99/199/299/399/499) — i.e. their NEXT class is the celebratory 100th/200th/etc. Counts only signed-in visits (no-shows/late-cancels excluded). Only considers clients who ATTENDED in the recent lookback window (default 30 days) — the only ones whose count could have just changed — so cost scales with recent attendance, NOT the 5,000+ roster. HEAVY on a cold run (~1 call per recent attendee plus the class feed); result cached 24h. Returns each flagged client's name, current attended count, the milestone, and their upcoming class number.",
+      "Flag clients whose lifetime ATTENDED-class count sits on a milestone (default 99/199/299/399/499) — i.e. their NEXT class is the celebratory 100th/200th/etc. Counts only signed-in visits (no-shows/late-cancels excluded). Only considers clients who ATTENDED in the recent lookback window (default 14 days) — the only ones whose count could have just changed — so cost scales with recent attendance, NOT the 5,000+ roster. HEAVY on a cold run (~1 call per recent attendee plus the class feed); result cached 24h. Returns each flagged client's name, current attended count, the milestone, and their upcoming class number.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -572,7 +572,7 @@ export const toolDefinitions = [
         },
         lookbackDays: {
           type: 'number',
-          description: 'How far back (in days) recent attendance qualifies a client as a candidate. Default 30. Lower it (e.g. 2) for cheap frequent runs; raise it to widen the net.',
+          description: 'How far back (in days) recent attendance qualifies a client as a candidate. Default 14. Lower it (e.g. 2) for cheap frequent runs; raise it to widen the net.',
         },
       },
     },

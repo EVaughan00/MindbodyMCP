@@ -4,7 +4,7 @@ import { getTenantCreds, getTenantNamespace, TenantCreds } from './context.js';
 interface TokenResponse {
   TokenType: string;
   AccessToken: string;
-  ExpiresIn: number;
+  ExpiresIn?: number; // not documented/returned by Mindbody — handled defensively
 }
 
 interface UserToken {
@@ -13,6 +13,12 @@ interface UserToken {
 }
 
 const DEFAULT_API_URL = 'https://api.mindbodyonline.com/public/v6';
+
+// Mindbody's /usertoken/issue response does NOT include an expiry field (just
+// TokenType + AccessToken + User), and the tokens are valid for ~7 days. We
+// cache conservatively for 6 hours; if the token is ever rejected early, the
+// 401 path in the API client resets state and re-issues.
+const DEFAULT_TOKEN_TTL_SECONDS = 6 * 60 * 60;
 
 /**
  * Mindbody user-token auth, isolated per tenant.
@@ -23,6 +29,9 @@ const DEFAULT_API_URL = 'https://api.mindbodyonline.com/public/v6';
 class MindbodyAuth {
   private tokenCache = new Map<string, UserToken>();
   private tokenFailed = new Set<string>();
+  // In-flight token issuance per tenant, so a burst of concurrent requests on a
+  // cold cache shares ONE /usertoken/issue call instead of each firing its own.
+  private inFlight = new Map<string, Promise<string | null>>();
 
   private hasSourceCredentials(creds: TenantCreds): boolean {
     return !!(creds.sourceName && creds.sourcePassword);
@@ -46,6 +55,21 @@ class MindbodyAuth {
       return cached.token;
     }
 
+    // Coalesce concurrent issuance: if a token request for this tenant is
+    // already running, await it instead of starting a second one.
+    const pending = this.inFlight.get(ns);
+    if (pending) return pending;
+
+    const issue = this.issueToken(ns, creds);
+    this.inFlight.set(ns, issue);
+    try {
+      return await issue;
+    } finally {
+      this.inFlight.delete(ns);
+    }
+  }
+
+  private async issueToken(ns: string, creds: TenantCreds): Promise<string | null> {
     try {
       const response = await axios.post<TokenResponse>(
         `${creds.apiUrl || DEFAULT_API_URL}/usertoken/issue`,
@@ -62,8 +86,13 @@ class MindbodyAuth {
         }
       );
 
-      const expiresAt = new Date();
-      expiresAt.setSeconds(expiresAt.getSeconds() + response.data.ExpiresIn - 60);
+      // ExpiresIn is not part of the documented response — only honor it if the
+      // API actually returns a sane positive number; otherwise use the default TTL.
+      const expiresIn =
+        Number.isFinite(response.data.ExpiresIn) && response.data.ExpiresIn > 0
+          ? response.data.ExpiresIn - 60
+          : DEFAULT_TOKEN_TTL_SECONDS;
+      const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
       this.tokenCache.set(ns, { token: response.data.AccessToken, expiresAt });
       this.tokenFailed.delete(ns);

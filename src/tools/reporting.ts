@@ -395,7 +395,7 @@ export async function getActiveMembersTool(
 // past the top milestone. Cost scales with recent attendance, not roster size.
 
 const MILESTONE_DEFAULTS = [99, 199, 299, 399, 499];
-const MILESTONE_LOOKBACK_DAYS = 30;     // attended in the last month ⇒ candidate
+const MILESTONE_LOOKBACK_DAYS = 14;     // attended in the last two weeks ⇒ candidate
 const MILESTONE_FEED_CONCURRENCY = 8;   // parallel class-visit reads (feed phase)
 const MILESTONE_COUNT_CONCURRENCY = 6;  // parallel per-candidate lifetime counts
 const MILESTONE_MAX_CANDIDATES = 4000;  // safety ceiling on candidates scanned in one pass
