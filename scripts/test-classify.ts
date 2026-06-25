@@ -65,6 +65,17 @@ const churn = classifyStatus({ Active: true, IsProspect: false, Status: 'Termina
 check('lapsed (terminated contract)', churn.status, 'lapsed');
 check('  churned flag set', String(churn.churned), 'true');
 
+// 8b. Active class pack (no contract) => member, tagged non-contract
+const packRes = classifyStatus({ Active: true, IsProspect: false, Status: 'Non-Member' },
+  [{ ProductId: 200, Remaining: 8, ExpirationDate: future, Name: '10 Class Pack' }], [], [], catalog, now);
+check('member (active class pack)', packRes.status, 'member');
+check('  tagged non-contract', String(packRes.memberType), 'non-contract');
+
+// 8c. Contract member tagged contract
+check('member tagged contract',
+  classifyStatus({ Active: true, IsProspect: false, Status: 'Active' }, [], [], [{ AutoRenewing: true, StartDate: past }], catalog, now).memberType,
+  'contract');
+
 // 9. External: ClassPass
 check('external (classpass)',
   classifyStatus({ Active: true, IsProspect: false, Status: 'Non-Member' },

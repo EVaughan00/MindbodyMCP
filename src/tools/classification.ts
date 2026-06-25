@@ -108,6 +108,8 @@ export async function getServiceCatalog(): Promise<Map<number, { isIntroOffer: b
 
 export interface Classification {
   status: ClientStatus;
+  /** when status is member: 'contract' (has a ClientContract) vs 'non-contract' (membership/class-pack only) */
+  memberType?: 'contract' | 'non-contract';
   /** churned = terminated contract OR lapsed non-contract membership */
   churned: boolean;
   wasEverMember: boolean;
@@ -147,6 +149,13 @@ export function classifyStatus(
   const hasActiveIntroService = services.some((s) => catalog.get(Number(s.ProductId))?.isIntroOffer && isActiveService(s, now));
   const hasActiveMembership = memberships.some((m) => isActiveMembership(m, now));
   const hasThirdParty = services.some((s) => matchesThirdParty(s.Name));
+  // For our use case an active non-intro, non-third-party service (class pack,
+  // paid-in-full pass, etc.) counts as a member — surfaced as memberType
+  // 'non-contract' so it's distinguishable from contract members. (RepFlow's
+  // own classifier excludes these; we intentionally include them here.)
+  const hasActiveClassPack = services.some(
+    (s) => isActiveService(s, now) && !catalog.get(Number(s.ProductId))?.isIntroOffer && !matchesThirdParty(s.Name)
+  );
   const terminatedContract = contracts.some((c) => {
     const t = parseDate(c.TerminationDate);
     return t !== null && t <= now;
@@ -169,6 +178,8 @@ export function classifyStatus(
     status = 'member';
   } else if (hasActiveMembership) {
     status = 'member';
+  } else if (hasActiveClassPack) {
+    status = 'member';
   } else if (hasActiveIntroService) {
     status = 'trialer';
   } else if (hasThirdParty) {
@@ -185,8 +196,14 @@ export function classifyStatus(
     contracts.length > 0 ||
     (!!mbStatus && (MEMBER_STATUSES.has(mbStatus) || TERMINATED_STATUSES.has(mbStatus)));
 
+  // contract vs non-contract member: a non-contract member holds an active
+  // membership/class-pack but no ClientContract (answers "members without a contract").
+  const memberType: 'contract' | 'non-contract' | undefined =
+    status === 'member' ? (contracts.length > 0 ? 'contract' : 'non-contract') : undefined;
+
   return {
     status,
+    memberType,
     churned: terminatedContract || (expiredMembership && !hasActiveMembership && !hasAutoRenewingActiveContract),
     wasEverMember,
     membershipStartsOn: pendingStart ? pendingStart.toISOString() : undefined,
@@ -213,6 +230,7 @@ export async function classifyClientTool(clientId: string): Promise<{
   clientId: string;
   name?: string;
   status: ClientStatus;
+  memberType?: 'contract' | 'non-contract';
   churned: boolean;
   wasEverMember: boolean;
   membershipStartsOn?: string;
