@@ -1,18 +1,110 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mindbody MCP</title>
+<title>Mindbody MCP — Get Started</title>
 <style>
-  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0f1115;color:#e8eaed;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
-  .card{max-width:440px;padding:32px;background:#1a1d24;border:1px solid #2a2f3a;border-radius:14px}
-  h1{font-size:20px;margin:0 0 8px}
-  p{color:#9aa0aa;font-size:14px;line-height:1.5}
-  code{background:#0f1115;border:1px solid #2a2f3a;border-radius:6px;padding:2px 6px;color:#4f8cff;font-size:13px}
-  a{color:#4f8cff}
+  :root{color-scheme:dark}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0f1115;color:#e8eaed;margin:0;padding:40px 20px;line-height:1.55}
+  .wrap{max-width:680px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px}
+  .lede{color:#9aa0aa;font-size:15px;margin:0 0 36px}
+  .step{position:relative;padding:22px 22px 22px 64px;background:#1a1d24;border:1px solid #2a2f3a;border-radius:14px;margin-bottom:18px}
+  .num{position:absolute;left:20px;top:22px;width:28px;height:28px;border-radius:50%;background:#4f8cff;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  h2{font-size:16px;margin:0 0 12px}
+  p{font-size:14px;color:#c4c8d0;margin:0 0 12px}
+  p:last-child{margin-bottom:0}
+  .path{border:1px solid #2a2f3a;border-radius:10px;padding:14px 16px;margin-bottom:12px;background:#13161c}
+  .path:last-child{margin-bottom:0}
+  .path h3{font-size:13px;margin:0 0 6px;color:#e8eaed;text-transform:uppercase;letter-spacing:.04em}
+  .path p{font-size:13px;margin:0;color:#9aa0aa}
+  ol.sub{margin:8px 0 0;padding-left:18px;font-size:13px;color:#9aa0aa}
+  ol.sub li{margin-bottom:5px}
+  code{background:#0f1115;border:1px solid #2a2f3a;border-radius:6px;padding:2px 7px;color:#4f8cff;font-size:13px;word-break:break-all}
+  a{color:#4f8cff;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .url{display:flex;align-items:center;gap:10px;background:#0f1115;border:1px solid #2a2f3a;border-radius:9px;padding:12px 14px;margin:6px 0 14px}
+  .url code{border:0;background:none;padding:0;font-size:14px;flex:1}
+  .copy{border:1px solid #2a2f3a;background:#1a1d24;color:#9aa0aa;font-size:12px;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
+  .copy:hover{color:#e8eaed;border-color:#4f8cff}
+  .note{font-size:12px;color:#d8b87a;background:#231d12;border:1px solid #4a3a1e;border-radius:7px;padding:8px 11px;margin-top:10px}
+  .tag{display:inline-block;font-size:11px;font-weight:600;color:#7ee0a2;background:#16271d;border:1px solid #234d36;border-radius:5px;padding:2px 7px;margin-left:6px;vertical-align:middle}
+  .foot{color:#6b7280;font-size:12px;text-align:center;margin-top:28px}
 </style></head>
-<body><div class="card">
+<body>
+<div class="wrap">
   <h1>Mindbody MCP</h1>
-  <p>Multi-tenant Mindbody MCP server.</p>
-  <p>MCP endpoint: <code>/mcp</code><br>Admin portal: <a href="/admin">/admin</a></p>
-  <p>Studios connect this URL as a custom connector in Claude and sign in with their Tenant ID + password.</p>
-</div></body></html>
+  <p class="lede">Connect your Mindbody studio to Claude or ChatGPT. Follow the steps below to get started.</p>
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="num">1</div>
+    <h2>Get Mindbody API access</h2>
+    <p>Pick whichever path fits you. Either way, the goal is a live <strong>Site ID</strong> connected to a developer account.</p>
+
+    <div class="path">
+      <h3>Path A · Self-register</h3>
+      <p>Register your own developer account and activate your site on the
+      <a href="https://developers.mindbodyonline.com" target="_blank" rel="noopener">Mindbody Developer Portal</a>.
+      When it's active, send me your <strong>API key</strong> and <strong>Site ID</strong> so I can register your studio here.</p>
+    </div>
+
+    <div class="path">
+      <h3>Path B · I activate you</h3>
+      <p>Don't want to manage a developer account? Email me your <strong>Site ID</strong> and I'll activate your studio
+      under my developer account using my existing API key — no portal signup needed.</p>
+      <p class="note">Note: if you register through me, I'll invoice you for Mindbody API usage.</p>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="num">2</div>
+    <h2>I register your studio</h2>
+    <p>Once I have your details (Path A: your API key + Site ID · Path B: just your Site ID), I'll add your studio
+    and send you a <strong>Tenant ID</strong> and <strong>password</strong>. These are your login for the connector below.</p>
+    <p>Questions or ready to start? Email <a href="mailto:evanvaughan@unboxedtechnology.com?subject=Mindbody%20MCP%20studio%20setup">evanvaughan@unboxedtechnology.com</a>.</p>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="num">3</div>
+    <h2>Connect Claude or ChatGPT</h2>
+    <p>Add this MCP endpoint as a custom connector and sign in with the Tenant ID + password I gave you:</p>
+    <div class="url">
+      <code id="mcpurl">/mcp</code>
+      <button class="copy" onclick="copyUrl()">Copy</button>
+    </div>
+
+    <div class="path">
+      <h3>Claude <span class="tag">Pro, Max, Team, or Enterprise</span></h3>
+      <ol class="sub">
+        <li>Open Claude (web or desktop app) and go to <strong>Settings → Connectors</strong>.</li>
+        <li>Click <strong>Add custom connector</strong> and paste the MCP URL above.</li>
+        <li>Connect and sign in with your <strong>Tenant ID</strong> + <strong>password</strong>.</li>
+      </ol>
+    </div>
+
+    <div class="path">
+      <h3>ChatGPT <span class="tag">Plus, Pro, Business, or Enterprise</span></h3>
+      <ol class="sub">
+        <li>Go to <strong>Settings → Connectors</strong> (enable <strong>Developer mode</strong> if prompted).</li>
+        <li>Click <strong>Add</strong> / <strong>Create</strong>, choose MCP, and paste the MCP URL above.</li>
+        <li>Connect and sign in with your <strong>Tenant ID</strong> + <strong>password</strong>.</li>
+      </ol>
+    </div>
+  </div>
+
+  <p class="foot">Need help? Email <a href="mailto:evanvaughan@unboxedtechnology.com">evanvaughan@unboxedtechnology.com</a></p>
+</div>
+<script>
+  // Show the real, fully-qualified MCP endpoint for this deployment.
+  var el=document.getElementById('mcpurl');
+  el.textContent=location.origin+'/mcp';
+  function copyUrl(){
+    navigator.clipboard.writeText(el.textContent).then(function(){
+      var b=document.querySelector('.copy');b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);
+    });
+  }
+</script>
+</body></html>
