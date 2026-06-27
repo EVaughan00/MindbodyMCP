@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How It Works — RepFlow MCP</title>
+<meta name="description" content="The mechanisms behind RepFlow MCP: Mindbody-native reporting, smart caching, full pagination, and secure per-studio access.">
+<link rel="icon" href="/images/logo/repflow-logo.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<nav class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="/"><img src="/images/logo/repflow-logo.png" alt="RepFlow">RepFlow MCP</a>
+  <div class="nav-links">
+    <a href="/how-it-works">How it works</a>
+    <a href="/get-started">Get started</a>
+    <a class="btn btn-primary btn-sm" href="/get-started">Connect your studio</a>
+  </div>
+</div></nav>
+
+<header class="hero" style="padding:64px 0 40px">
+  <div class="wrap narrow">
+    <div class="badge">Under the hood</div>
+    <h1 style="font-size:clamp(32px,5vw,46px)">How RepFlow MCP works</h1>
+    <p class="lede">An MCP (Model Context Protocol) server that gives Claude and ChatGPT a clean, Mindbody-native way to read and act on your studio data.</p>
+  </div>
+</header>
+
+<!-- THE MODEL -->
+<section class="block band" style="padding:48px 0"><div class="wrap narrow">
+  <p class="eyebrow">The short version</p>
+  <h2>You ask, it translates</h2>
+  <p class="section-lede">MCP is an open standard that lets AI assistants talk to outside tools. RepFlow MCP is the bridge between your AI assistant and the Mindbody API: you ask a question in plain language, the assistant calls the right RepFlow tool, and RepFlow handles the Mindbody specifics — endpoints, pagination, filtering — then hands back a clean answer.</p>
+</div></section>
+
+<!-- MECHANISMS -->
+<section class="block"><div class="wrap narrow">
+  <p class="eyebrow">The mechanisms</p>
+  <h2>What makes it dialed for Mindbody</h2>
+
+  <div class="feature">
+    <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h13M9 5h13M4 5h.01M4 11h.01M4 17h.01"/></svg></div>
+    <div>
+      <h3>Studio-wide reporting, done right</h3>
+      <p>Purpose-built reports — member rosters, terminations, sales by service — fetch every record with full pagination instead of looping one client at a time. You get the complete picture, not a truncated sample.</p>
+    </div>
+  </div>
+
+  <div class="feature">
+    <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 2L3 14h7l-1 8 11-13h-7l1-7z"/></svg></div>
+    <div>
+      <h3>Fast, with intelligent caching</h3>
+      <p>Frequently-used data is cached (short for live class data, longer for stable info like locations and staff) so answers come back quickly and you stay well within Mindbody's rate limits. Writes clear the cache automatically, so you never act on stale data.</p>
+    </div>
+  </div>
+
+  <div class="feature">
+    <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div>
+    <div>
+      <h3>Smarter data, enriched automatically</h3>
+      <p>RepFlow adds context Mindbody won't give you out of the box — like tagging members as contract vs. non-contract — so the answers you get are already shaped around real studio decisions.</p>
+    </div>
+  </div>
+
+  <div class="feature">
+    <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    <div>
+      <h3>50+ studio operations</h3>
+      <p>Classes, bookings &amp; waitlists, clients &amp; memberships, sales &amp; packages, staff schedules, appointments, and enrollments — the full range of day-to-day studio operations, ready to query and act on.</p>
+    </div>
+  </div>
+
+  <div class="feature">
+    <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+    <div>
+      <h3>Secure, isolated per studio</h3>
+      <p>Connections use OAuth, and every studio is its own tenant with its own login. Your credentials and data are isolated — no studio can ever see another's.</p>
+    </div>
+  </div>
+
+</div></section>
+
+<!-- EXAMPLES -->
+<section class="block band"><div class="wrap narrow">
+  <p class="eyebrow">In practice</p>
+  <h2>Things you can just ask</h2>
+  <div class="cards">
+    <div class="card"><p>"How many spots are open across this week's classes?"</p></div>
+    <div class="card"><p>"Which members on contracts haven't visited in 30 days?"</p></div>
+    <div class="card"><p>"Show me sales by service for last month."</p></div>
+    <div class="card"><p>"Who's on the waitlist for tomorrow's 6pm class?"</p></div>
+    <div class="card"><p>"Pull a list of members who terminated this quarter."</p></div>
+    <div class="card"><p>"What's Alexia's teaching schedule this week?"</p></div>
+  </div>
+</div></section>
+
+<!-- CTA -->
+<div class="cta-band"><div class="cta-card">
+  <h2>See it on your own data</h2>
+  <p>Connect your studio and start asking questions in minutes.</p>
+  <a class="btn btn-primary btn-lg" href="/get-started">Get started</a>
+</div></div>
+
+<footer class="footer"><div class="wrap footer-inner">
+  <a class="brand" href="/"><img src="/images/logo/repflow-logo.png" alt="RepFlow">RepFlow MCP</a>
+  <div class="footer-links">
+    <a href="/how-it-works">How it works</a>
+    <a href="/get-started">Get started</a>
+    <a href="mailto:evan@repflow-ai.com">Contact</a>
+  </div>
+</div></footer>
+
+</body></html>

@@ -4,6 +4,7 @@
   "buildCommand": null,
   "installCommand": "npm install",
   "outputDirectory": "public",
+  "cleanUrls": true,
   "functions": {
     "api/mcp.ts": { "maxDuration": 60 }
   },

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get Started — RepFlow MCP</title>
+<meta name="description" content="Connect your Mindbody studio to Claude or ChatGPT in three quick steps.">
+<link rel="icon" href="/images/logo/repflow-logo.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<nav class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="/"><img src="/images/logo/repflow-logo.png" alt="RepFlow">RepFlow MCP</a>
+  <div class="nav-links">
+    <a href="/how-it-works">How it works</a>
+    <a href="/get-started">Get started</a>
+    <a class="btn btn-primary btn-sm" href="#connect">Connect</a>
+  </div>
+</div></nav>
+
+<header class="hero" style="padding:64px 0 40px">
+  <div class="wrap narrow">
+    <div class="badge">Setup in 3 steps</div>
+    <h1 style="font-size:clamp(32px,5vw,46px)">Connect your studio</h1>
+    <p class="lede">Get your Mindbody data into Claude or ChatGPT. Here's the whole process, start to finish.</p>
+  </div>
+</header>
+
+<section class="block" style="padding-top:8px"><div class="wrap narrow">
+  <div class="steps">
+
+    <!-- STEP 1 -->
+    <div class="step">
+      <div class="num">1</div>
+      <div class="body">
+        <h3>Send me your Site ID</h3>
+        <p>Email me your Mindbody <strong>Site ID</strong> and I'll activate your studio under my developer account — no Mindbody developer portal signup needed on your end.</p>
+        <p>Email <a href="mailto:evan@repflow-ai.com?subject=RepFlow%20MCP%20studio%20setup">evan@repflow-ai.com</a> to get started.</p>
+        <p class="note">Note: I'll invoice you for Mindbody API usage.</p>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step">
+      <div class="num">2</div>
+      <div class="body">
+        <h3>I register your studio</h3>
+        <p>Once your site is activated, I'll add your studio and send you a <strong>Tenant ID</strong> and <strong>password</strong>. These are your login for the connector in step 3.</p>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step" id="connect">
+      <div class="num">3</div>
+      <div class="body">
+        <h3>Connect Claude or ChatGPT</h3>
+        <p>Add the RepFlow MCP endpoint as a custom connector and sign in with the Tenant ID + password I gave you:</p>
+        <div class="urlbox">
+          <code id="mcpurl">/mcp</code>
+          <button class="copy" onclick="copyUrl()">Copy</button>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <h3>Claude <span class="tag">Pro · Max · Team · Enterprise</span></h3>
+            <ol class="sub">
+              <li>Open Claude (web or desktop) → <strong>Settings → Connectors</strong>.</li>
+              <li>Click <strong>Add custom connector</strong> and paste the URL above.</li>
+              <li>Connect and sign in with your <strong>Tenant ID</strong> + <strong>password</strong>.</li>
+            </ol>
+          </div>
+          <div class="panel">
+            <h3>ChatGPT <span class="tag">Plus · Pro · Business · Enterprise</span></h3>
+            <ol class="sub">
+              <li>Go to <strong>Settings → Connectors</strong> (enable <strong>Developer mode</strong> if prompted).</li>
+              <li>Click <strong>Add</strong>, choose MCP, and paste the URL above.</li>
+              <li>Connect and sign in with your <strong>Tenant ID</strong> + <strong>password</strong>.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="subnote" style="text-align:center;margin-top:32px">Questions? Email <a href="mailto:evan@repflow-ai.com">evan@repflow-ai.com</a> — happy to help you get set up.</p>
+</div></section>
+
+<footer class="footer"><div class="wrap footer-inner">
+  <a class="brand" href="/"><img src="/images/logo/repflow-logo.png" alt="RepFlow">RepFlow MCP</a>
+  <div class="footer-links">
+    <a href="/how-it-works">How it works</a>
+    <a href="/get-started">Get started</a>
+    <a href="mailto:evan@repflow-ai.com">Contact</a>
+  </div>
+</div></footer>
+
+<script>
+  var el=document.getElementById('mcpurl');
+  el.textContent=location.origin+'/mcp';
+  function copyUrl(){
+    navigator.clipboard.writeText(el.textContent).then(function(){
+      var b=document.querySelector('.copy');b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);
+    });
+  }
+</script>
+</body></html>

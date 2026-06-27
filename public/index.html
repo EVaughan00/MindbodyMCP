@@ -1,110 +1,98 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mindbody MCP — Get Started</title>
-<style>
-  :root{color-scheme:dark}
-  *{box-sizing:border-box}
-  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0f1115;color:#e8eaed;margin:0;padding:40px 20px;line-height:1.55}
-  .wrap{max-width:680px;margin:0 auto}
-  h1{font-size:24px;margin:0 0 6px}
-  .lede{color:#9aa0aa;font-size:15px;margin:0 0 36px}
-  .step{position:relative;padding:22px 22px 22px 64px;background:#1a1d24;border:1px solid #2a2f3a;border-radius:14px;margin-bottom:18px}
-  .num{position:absolute;left:20px;top:22px;width:28px;height:28px;border-radius:50%;background:#4f8cff;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
-  h2{font-size:16px;margin:0 0 12px}
-  p{font-size:14px;color:#c4c8d0;margin:0 0 12px}
-  p:last-child{margin-bottom:0}
-  .path{border:1px solid #2a2f3a;border-radius:10px;padding:14px 16px;margin-bottom:12px;background:#13161c}
-  .path:last-child{margin-bottom:0}
-  .path h3{font-size:13px;margin:0 0 6px;color:#e8eaed;text-transform:uppercase;letter-spacing:.04em}
-  .path p{font-size:13px;margin:0;color:#9aa0aa}
-  ol.sub{margin:8px 0 0;padding-left:18px;font-size:13px;color:#9aa0aa}
-  ol.sub li{margin-bottom:5px}
-  code{background:#0f1115;border:1px solid #2a2f3a;border-radius:6px;padding:2px 7px;color:#4f8cff;font-size:13px;word-break:break-all}
-  a{color:#4f8cff;text-decoration:none}
-  a:hover{text-decoration:underline}
-  .url{display:flex;align-items:center;gap:10px;background:#0f1115;border:1px solid #2a2f3a;border-radius:9px;padding:12px 14px;margin:6px 0 14px}
-  .url code{border:0;background:none;padding:0;font-size:14px;flex:1}
-  .copy{border:1px solid #2a2f3a;background:#1a1d24;color:#9aa0aa;font-size:12px;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
-  .copy:hover{color:#e8eaed;border-color:#4f8cff}
-  .note{font-size:12px;color:#d8b87a;background:#231d12;border:1px solid #4a3a1e;border-radius:7px;padding:8px 11px;margin-top:10px}
-  .tag{display:inline-block;font-size:11px;font-weight:600;color:#7ee0a2;background:#16271d;border:1px solid #234d36;border-radius:5px;padding:2px 7px;margin-left:6px;vertical-align:middle}
-  .foot{color:#6b7280;font-size:12px;text-align:center;margin-top:28px}
-</style></head>
+<title>RepFlow MCP — Your Mindbody data, on demand</title>
+<meta name="description" content="RepFlow MCP connects your Mindbody studio to Claude and ChatGPT, so you can ask for the right data at the right time — in plain language.">
+<link rel="icon" href="/images/logo/repflow-logo.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
 <body>
-<div class="wrap">
-  <h1>Mindbody MCP</h1>
-  <p class="lede">Connect your Mindbody studio to Claude or ChatGPT. Follow the steps below to get started.</p>
 
-  <!-- STEP 1 -->
-  <div class="step">
-    <div class="num">1</div>
-    <h2>Get Mindbody API access</h2>
-    <p>Pick whichever path fits you. Either way, the goal is a live <strong>Site ID</strong> connected to a developer account.</p>
+<nav class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="/"><img src="/images/logo/repflow-logo.png" alt="RepFlow">RepFlow MCP</a>
+  <div class="nav-links">
+    <a href="/how-it-works">How it works</a>
+    <a href="/get-started">Get started</a>
+    <a class="btn btn-primary btn-sm" href="/get-started">Connect your studio</a>
+  </div>
+</div></nav>
 
-    <div class="path">
-      <h3>Path A · Self-register</h3>
-      <p>Register your own developer account and activate your site on the
-      <a href="https://developers.mindbodyonline.com" target="_blank" rel="noopener">Mindbody Developer Portal</a>.
-      When it's active, send me your <strong>API key</strong> and <strong>Site ID</strong> so I can register your studio here.</p>
+<!-- HERO -->
+<header class="hero"><div class="wrap">
+  <div class="badge">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    Mindbody data, tuned for AI
+  </div>
+  <h1>Ask your studio data<br><span class="grad">anything</span></h1>
+  <p class="lede">RepFlow MCP connects your Mindbody studio to Claude and ChatGPT — so you can get the right data at the right moment, just by asking in plain language.</p>
+  <div class="cta-row">
+    <a class="btn btn-primary btn-lg" href="/get-started">Connect your studio</a>
+    <a class="btn btn-outline btn-lg" href="/how-it-works">See how it works</a>
+  </div>
+  <div class="trust">
+    <span><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Works with Claude &amp; ChatGPT</span>
+    <span><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>No spreadsheets, no exports</span>
+    <span><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Secure, per-studio access</span>
+  </div>
+</div></header>
+
+<!-- WHY -->
+<section class="block band"><div class="wrap narrow">
+  <p class="eyebrow">Why we built it</p>
+  <h2>Getting the right Mindbody data shouldn't be this hard</h2>
+  <p class="section-lede">If you run a studio, you know the drill: the answer you need is buried somewhere in Mindbody, behind the right report, the right filters, the right date range. By the time you've found it, the moment has passed.</p>
+  <p class="section-lede">We built RepFlow MCP because studio owners deserve answers, not exports. It speaks Mindbody's API fluently so you don't have to — you ask a question in Claude or ChatGPT, and it pulls exactly what you need.</p>
+</div></section>
+
+<!-- WHAT IT DOES -->
+<section class="block"><div class="wrap">
+  <div class="center">
+    <p class="eyebrow">What makes it different</p>
+    <h2>Dialed in for Mindbody</h2>
+    <p class="section-lede">RepFlow MCP isn't a generic wrapper. It's purpose-built around how Mindbody actually works.</p>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.2-5.2m2.2-5.3a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"/></svg></div>
+      <h3>Ask in plain language</h3>
+      <p>"How many spots are open in tomorrow's classes?" "Who hasn't been in this month?" Get answers without learning a single report.</p>
     </div>
-
-    <div class="path">
-      <h3>Path B · I activate you</h3>
-      <p>Don't want to manage a developer account? Email me your <strong>Site ID</strong> and I'll activate your studio
-      under my developer account using my existing API key — no portal signup needed.</p>
-      <p class="note">Note: if you register through me, I'll invoice you for Mindbody API usage.</p>
+    <div class="card">
+      <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+      <h3>Fast by design</h3>
+      <p>Smart caching and full-pagination reporting mean you get complete, accurate results quickly — without hammering the Mindbody API.</p>
+    </div>
+    <div class="card">
+      <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.6 1.4A9 9 0 11 5.6 5.6 9 9 0 0120.6 11.4z"/></svg></div>
+      <h3>Built for real workflows</h3>
+      <p>Classes, clients, memberships, sales, staff schedules, enrollments — 50+ studio operations, ready to query and act on.</p>
+    </div>
+    <div class="card">
+      <div class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+      <h3>Private to your studio</h3>
+      <p>Each studio gets its own secure login. Your data stays yours — isolated from every other tenant on the server.</p>
     </div>
   </div>
-
-  <!-- STEP 2 -->
-  <div class="step">
-    <div class="num">2</div>
-    <h2>I register your studio</h2>
-    <p>Once I have your details (Path A: your API key + Site ID · Path B: just your Site ID), I'll add your studio
-    and send you a <strong>Tenant ID</strong> and <strong>password</strong>. These are your login for the connector below.</p>
-    <p>Questions or ready to start? Email <a href="mailto:evanvaughan@unboxedtechnology.com?subject=Mindbody%20MCP%20studio%20setup">evanvaughan@unboxedtechnology.com</a>.</p>
+  <div class="center" style="margin-top:36px">
+    <a class="btn btn-outline" href="/how-it-works">More on how it works →</a>
   </div>
+</div></section>
 
-  <!-- STEP 3 -->
-  <div class="step">
-    <div class="num">3</div>
-    <h2>Connect Claude or ChatGPT</h2>
-    <p>Add this MCP endpoint as a custom connector and sign in with the Tenant ID + password I gave you:</p>
-    <div class="url">
-      <code id="mcpurl">/mcp</code>
-      <button class="copy" onclick="copyUrl()">Copy</button>
-    </div>
+<!-- CTA -->
+<div class="cta-band"><div class="cta-card">
+  <h2>Ready to connect your studio?</h2>
+  <p>Three quick steps and you'll be asking your Mindbody data anything in Claude or ChatGPT.</p>
+  <a class="btn btn-primary btn-lg" href="/get-started">Get started</a>
+</div></div>
 
-    <div class="path">
-      <h3>Claude <span class="tag">Pro, Max, Team, or Enterprise</span></h3>
-      <ol class="sub">
-        <li>Open Claude (web or desktop app) and go to <strong>Settings → Connectors</strong>.</li>
-        <li>Click <strong>Add custom connector</strong> and paste the MCP URL above.</li>
-        <li>Connect and sign in with your <strong>Tenant ID</strong> + <strong>password</strong>.</li>
-      </ol>
-    </div>
-
-    <div class="path">
-      <h3>ChatGPT <span class="tag">Plus, Pro, Business, or Enterprise</span></h3>
-      <ol class="sub">
-        <li>Go to <strong>Settings → Connectors</strong> (enable <strong>Developer mode</strong> if prompted).</li>
-        <li>Click <strong>Add</strong> / <strong>Create</strong>, choose MCP, and paste the MCP URL above.</li>
-        <li>Connect and sign in with your <strong>Tenant ID</strong> + <strong>password</strong>.</li>
-      </ol>
-    </div>
+<!-- FOOTER -->
+<footer class="footer"><div class="wrap footer-inner">
+  <a class="brand" href="/"><img src="/images/logo/repflow-logo.png" alt="RepFlow">RepFlow MCP</a>
+  <div class="footer-links">
+    <a href="/how-it-works">How it works</a>
+    <a href="/get-started">Get started</a>
+    <a href="mailto:evan@repflow-ai.com">Contact</a>
   </div>
+</div></footer>
 
-  <p class="foot">Need help? Email <a href="mailto:evanvaughan@unboxedtechnology.com">evanvaughan@unboxedtechnology.com</a></p>
-</div>
-<script>
-  // Show the real, fully-qualified MCP endpoint for this deployment.
-  var el=document.getElementById('mcpurl');
-  el.textContent=location.origin+'/mcp';
-  function copyUrl(){
-    navigator.clipboard.writeText(el.textContent).then(function(){
-      var b=document.querySelector('.copy');b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);
-    });
-  }
-</script>
 </body></html>
